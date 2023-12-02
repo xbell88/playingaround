@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Battle</title>
+
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        #battle-container {
+            text-align: center;
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+        }
+
+        .stat-card {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin: 10px;
+            display: inline-block;
+            text-align: left;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            display: none; /* Initially hide the images */
+        }
+
+        #myPokemonImage,
+        #opponentPokemonImage {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="battle-container">
+        <h1>Pokemon Battle</h1>
+        <button onclick="battle()">Start Battle</button>
+        <p id="result"></p>
+        <img id="myPokemonImage" alt="My Pokemon Image">
+        <div id="myPokemonCard" class="stat-card"></div>
+        <img id="opponentPokemonImage" alt="Opponent Pokemon Image">
+        <div id="opponentPokemonCard" class="stat-card"></div>
+        <p>Wins: <span id="winCount">0</span> Losses: <span id="lossCount">0</span></p>
+    </div>
+
+    <script>
+        function randomPokemon() {
+            var pokemonNumber = Math.floor(Math.random() * 151) + 1;
+            var url = 'https://pokeapi.co/api/v2/pokemon/' + pokemonNumber + '/';
+            return fetch(url)
+                .then(response => response.json())
+                .then(pokemon => {
+                    return {
+                        'name': pokemon.name,
+                        'image_url': pokemon.sprites.front_default,
+                        'id': pokemon.id,
+                        'height': pokemon.height,
+                        'weight': pokemon.weight,
+                        'experience': pokemon.base_experience,
+                        'types': pokemon.types.map(type => type.type.name)
+                    };
+                });
+        }
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+        }
+
+        function displayPokemonCard(cardId, imageId, pokemon) {
+            var cardElement = document.getElementById(cardId);
+            var imageElement = document.getElementById(imageId);
+
+            cardElement.innerHTML = '<strong>' + capitalizeFirstLetter(pokemon.name) + '</strong><br>' +
+                                    'ID: ' + pokemon.id + '<br>' +
+                                    'Height: ' + pokemon.height + '<br>' +
+                                    'Weight: ' + pokemon.weight + '<br>' +
+                                    'Experience: ' + pokemon.experience + '<br>' +
+                                    'Types: ' + pokemon.types.join(', ');
+
+            imageElement.src = pokemon.image_url;
+            imageElement.style.display = 'inline'; // Show the image
+        }
+
+        function getRandomStat() {
+            var stats = ['id', 'height', 'weight', 'experience'];
+            return stats[Math.floor(Math.random() * stats.length)];
+        }
+
+        function updateWinCount(count) {
+            document.getElementById('winCount').innerText = count;
+        }
+
+        function updateLossCount(count) {
+            document.getElementById('lossCount').innerText = count;
+        }
+
+        function getWinCount() {
+            return parseInt(localStorage.getItem('winCount')) || 0;
+        }
+
+        function getLossCount() {
+            return parseInt(localStorage.getItem('lossCount')) || 0;
+        }
+
+        function setWinCount(count) {
+            localStorage.setItem('winCount', count);
+        }
+
+        function setLossCount(count) {
+            localStorage.setItem('lossCount', count);
+        }
+
+        function battle() {
+            var resultElement = document.getElementById('result');
+            resultElement.innerHTML = '';
+
+            var myPokemon, opponentPokemon;
+            randomPokemon().then(pokemon => {
+                myPokemon = pokemon;
+                displayPokemonCard('myPokemonCard', 'myPokemonImage', myPokemon);
+                return randomPokemon();
+            }).then(pokemon => {
+                opponentPokemon = pokemon;
+                displayPokemonCard('opponentPokemonCard', 'opponentPokemonImage', opponentPokemon);
+
+                var statChoice = getRandomStat();
+
+                var myStat = myPokemon[statChoice];
+                var opponentStat = opponentPokemon[statChoice];
+
+                resultElement.innerHTML = 'You were given ' + capitalizeFirstLetter(myPokemon.name) +
+                    '<br>The opponent chose ' + capitalizeFirstLetter(opponentPokemon.name) +
+                    '<br>Battle Stat: ' + statChoice.charAt(0).toUpperCase() + statChoice.slice(1);
+
+                if (myStat > opponentStat) {
+                    resultElement.innerHTML += '<br>You Win!';
+                    updateWinCount(getWinCount() + 1);
+                    setWinCount(getWinCount() + 1);
+                } else if (myStat < opponentStat) {
+                    resultElement.innerHTML += '<br>You Lose!';
+                    updateLossCount(getLossCount() + 1);
+                    setLossCount(getLossCount() + 1);
+                } else {
+                    resultElement.innerHTML += '<br>Draw!';
+                }
+            });
+        }
+
+        // Initialize win and loss counts on page load
+        updateWinCount(getWinCount());
+        updateLossCount(getLossCount());
+    </script>
+</body>
+</html>
