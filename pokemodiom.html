@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Battle</title>
+</head>
+<body>
+    <h1>Pokemon Battle</h1>
+    <button onclick="battle()">Start Battle</button>
+    <p id="result"></p>
+    <img id="myPokemonImage" alt="My Pokemon Image">
+    <img id="opponentPokemonImage" alt="Opponent Pokemon Image">
+
+    <script>
+        function randomPokemon() {
+            var pokemonNumber = Math.floor(Math.random() * 151) + 1;
+            var url = 'https://pokeapi.co/api/v2/pokemon/' + pokemonNumber + '/';
+            return fetch(url)
+                .then(response => response.json())
+                .then(pokemon => {
+                    return {
+                        'name': pokemon.name,
+                        'image_url': pokemon.sprites.front_default,
+                        'id': pokemon.id,
+                        'height': pokemon.height,
+                        'weight': pokemon.weight
+                    };
+                });
+        }
+
+        function displayPokemonImage(imageId, imageUrl) {
+            var img = document.getElementById(imageId);
+            img.src = imageUrl;
+        }
+
+        function battle() {
+            var resultElement = document.getElementById('result');
+            resultElement.innerHTML = '';
+
+            var myPokemon, opponentPokemon;
+            randomPokemon().then(pokemon => {
+                myPokemon = pokemon;
+                displayPokemonImage('myPokemonImage', myPokemon.image_url);
+                return randomPokemon();
+            }).then(pokemon => {
+                opponentPokemon = pokemon;
+                displayPokemonImage('opponentPokemonImage', opponentPokemon.image_url);
+
+                var stats = ['id', 'height', 'weight'];
+                var statChoice = stats[Math.floor(Math.random() * stats.length)];
+
+                var myStat = myPokemon[statChoice];
+                var opponentStat = opponentPokemon[statChoice];
+
+                resultElement.innerHTML = 'You were given ' + myPokemon.name +
+                    '<br>The opponent chose ' + opponentPokemon.name +
+                    '<br>Battle Stat: ' + statChoice.charAt(0).toUpperCase() + statChoice.slice(1);
+
+                if (myStat > opponentStat) {
+                    resultElement.innerHTML += '<br>You Win!';
+                } else if (myStat < opponentStat) {
+                    resultElement.innerHTML += '<br>You Lose!';
+                } else {
+                    resultElement.innerHTML += '<br>Draw!';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
