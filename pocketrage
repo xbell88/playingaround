@@ -1,0 +1,45 @@
+import random
+import requests
+from PIL import Image
+from io import BytesIO
+
+def random_pokemon():
+    pokemon_number = random.randint(1, 151)
+    url = 'https://pokeapi.co/api/v2/pokemon/{}/'.format(pokemon_number)
+    response = requests.get(url)
+    pokemon = response.json()
+    return {
+        'name': pokemon['name'],
+        'id': pokemon['id'],
+        'height': pokemon['height'],
+        'weight': pokemon['weight'],
+        'image_url': pokemon['sprites']['front_default'],  # Image URL
+    }
+
+def display_pokemon_image(pokemon):
+    image_url = pokemon['image_url']
+    response = requests.get(image_url)
+    img = Image.open(BytesIO(response.content))
+    img.show()
+
+def run():
+    my_pokemon = random_pokemon()
+    print('You were given {}'.format(my_pokemon['name']))
+    stat_choice = input('Which stat do you want to use? (id, height, weight) ')
+    opponent_pokemon = random_pokemon()
+    print('The opponent chose {}'.format(opponent_pokemon['name']))
+    my_stat = my_pokemon.get(stat_choice, 0)
+    opponent_stat = opponent_pokemon.get(stat_choice, 0)
+    
+    if my_stat > opponent_stat:
+        print('You Win!')
+    elif my_stat < opponent_stat:
+        print('You Lose!')
+    else:
+        print('Draw!')
+    
+    # Display images of the Pokémon
+    display_pokemon_image(my_pokemon)
+    display_pokemon_image(opponent_pokemon)
+
+run()
